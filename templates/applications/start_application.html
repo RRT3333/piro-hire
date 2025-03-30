@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}피로그래밍 지원 - 기본 정보{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">기본 정보 입력</h2>
+
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h5>지원자 정보</h5>
+                        {{ applicant_form|crispy }}
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>면접 희망 시간</h5>
+                        {{ application_form|crispy }}
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">안내사항</h5>
+                        <ul class="mb-0">
+                            <li>이메일 주소로 인증 메일이 발송됩니다.</li>
+                            <li>증명사진은 3x4 사이즈로 준비해주세요.</li>
+                            <li>면접 시간은 가능한 시간대를 모두 선택해주세요.</li>
+                            <li>모든 필수 항목(*)을 작성해주세요.</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="{% url 'applications:index' %}" class="btn btn-secondary">
+                            돌아가기
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            다음 단계
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Preview uploaded image
+    document.getElementById('id_photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                e.target.value = '';
+                return;
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                e.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('img');
+                preview.src = e.target.result;
+                preview.style.maxHeight = '200px';
+                preview.style.marginTop = '10px';
+                preview.className = 'img-thumbnail';
+                
+                const previewContainer = document.getElementById('id_photo').parentElement;
+                const existingPreview = previewContainer.querySelector('img');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                previewContainer.appendChild(preview);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

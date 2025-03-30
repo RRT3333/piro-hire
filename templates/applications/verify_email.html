@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}피로그래밍 지원 - 이메일 인증{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">이메일 인증</h2>
+
+                <div class="alert alert-info mb-4">
+                    <p class="mb-0">
+                        <strong>{{ applicant.email }}</strong>로 인증 코드가 발송되었습니다.<br>
+                        이메일을 확인하여 인증 코드를 입력해주세요.
+                    </p>
+                </div>
+
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            인증하기
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center">
+                    <p class="text-muted">인증 메일을 받지 못하셨나요?</p>
+                    <button id="resendButton" class="btn btn-outline-secondary" onclick="resendVerification()">
+                        인증 메일 재전송
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function resendVerification() {
+        const button = document.getElementById('resendButton');
+        button.disabled = true;
+        button.innerHTML = '전송 중...';
+
+        fetch('{% url "applications:resend_verification" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+            } else {
+                alert('인증 메일 재전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('인증 메일 재전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '인증 메일 재전송';
+            }, 30000);  // 30초 후 재전송 가능
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %} 

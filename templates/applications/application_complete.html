@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}피로그래밍 지원 - 제출 완료{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h2 class="card-title mb-4">지원이 완료되었습니다!</h2>
+                    
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading mb-3">다음 단계 안내</h5>
+                        <p class="mb-0">
+                            면접 시간 확정 및 추가 안내는 이메일로 발송될 예정입니다.<br>
+                            <strong>{{ application.applicant.email }}</strong>로 전송되는 이메일을 확인해주세요.
+                        </p>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'applications:view_application' application.id %}" 
+                           class="btn btn-primary btn-lg">
+                            <i class="bi bi-file-text me-2"></i>내 지원서 확인하기
+                        </a>
+                        <a href="{% url 'applications:index' %}" 
+                           class="btn btn-outline-secondary">
+                            메인으로 돌아가기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

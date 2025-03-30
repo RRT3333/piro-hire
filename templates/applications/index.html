@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}피로그래밍 지원 - 메인{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-4">피로그래밍 지원</h1>
+                
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">모집 기간</h5>
+                    <p class="mb-0">
+                        {{ recruitment.application_start_date|date:"Y년 m월 d일 H:i" }} ~ 
+                        {{ recruitment.application_end_date|date:"Y년 m월 d일 H:i" }}
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <h5>면접 일정</h5>
+                    <p>
+                        {{ recruitment.interview_start_date|date:"Y년 m월 d일" }} ~ 
+                        {{ recruitment.interview_end_date|date:"Y년 m월 d일" }}
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <h5>모집 공고</h5>
+                    <div class="recruitment-notice">
+                        {{ recruitment.recruitment_notice|linebreaks }}
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">지원 시 유의사항</h5>
+                    <ul class="mb-0">
+                        <li>모든 필수 항목을 반드시 작성해주세요.</li>
+                        <li>이메일 인증이 필요합니다.</li>
+                        <li>지원서는 임시저장이 가능하며, 최종 제출 전까지 수정이 가능합니다.</li>
+                        <li>제출 완료 후에는 수정이 불가능합니다.</li>
+                        <li>면접 시간은 토요일/일요일 오전/오후 중 선택 가능합니다.</li>
+                    </ul>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'applications:start_application' %}" class="btn btn-primary btn-lg">
+                        지원하기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}피로그래밍 지원 - 질문 답변{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">지원서 작성</h2>
+
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">작성 안내</h5>
+                    <ul class="mb-0">
+                        <li>각 문항의 글자 수 제한을 확인해주세요.</li>
+                        <li>임시저장 후 나중에 이어서 작성할 수 있습니다.</li>
+                        <li>최종 제출 전 모든 필수 문항을 작성했는지 확인해주세요.</li>
+                        <li>제출 완료 후에는 수정이 불가능합니다.</li>
+                    </ul>
+                </div>
+
+                <form method="post" id="answerForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label {% if field.field.required %}required-field{% endif %}">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ field.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="text-center mt-4">
+                        <button type="submit" name="save_draft" class="btn btn-outline-primary me-2" onclick="return confirmSave('draft')">
+                            임시저장
+                        </button>
+                        <button type="submit" class="btn btn-primary" onclick="return confirmSave('submit')">
+                            최종 제출
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function confirmSave(type) {
+        const form = document.getElementById('answerForm');
+        const exceeded = Array.from(document.querySelectorAll('.char-count.exceeded')).length > 0;
+        
+        if (exceeded) {
+            alert('글자 수 제한을 초과한 항목이 있습니다. 수정 후 다시 시도해주세요.');
+            return false;
+        }
+
+        if (type === 'submit') {
+            const required = Array.from(form.querySelectorAll('[required]'));
+            const empty = required.some(field => !field.value.trim());
+            
+            if (empty) {
+                alert('모든 필수 항목을 작성해주세요.');
+                return false;
+            }
+
+            return confirm('최종 제출하시겠습니까?\n제출 후에는 수정이 불가능합니다.');
+        }
+
+        return true;
+    }
+
+    // Auto-save draft every 5 minutes
+    let autoSaveInterval = setInterval(() => {
+        const form = document.getElementById('answerForm');
+        const formData = new FormData(form);
+        formData.append('save_draft', 'true');
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Auto-saved at ' + new Date().toLocaleTimeString());
+            }
+        })
+        .catch(error => console.error('Auto-save failed:', error));
+    }, 300000);  // 5 minutes
+
+    // Clear interval when leaving the page
+    window.addEventListener('beforeunload', () => {
+        clearInterval(autoSaveInterval);
+    });
+</script>
+{% endblock %}
+{% endblock %} 
