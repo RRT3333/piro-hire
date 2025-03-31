@@ -167,9 +167,13 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = 'applications:index'
+LOGOUT_REDIRECT_URL = 'applications:index'
+LOGIN_URL = 'login'
+AUTH_USER_MODEL = 'applications.Applicant'
+
+# Custom authentication form
+LOGIN_FORM = 'applications.forms.CustomAuthenticationForm'
 
 # Session settings
 SESSION_COOKIE_AGE = 3600  # 1 hour

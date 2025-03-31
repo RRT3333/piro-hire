@@ -16,6 +16,7 @@
                         <li>각 문항의 글자 수 제한을 확인해주세요.</li>
                         <li>임시저장 후 나중에 이어서 작성할 수 있습니다.</li>
                         <li>최종 제출 전 모든 필수 문항을 작성했는지 확인해주세요.</li>
+                        <li>면접 가능 시간을 최소 한 개 이상 선택해주세요.</li>
                         <li>제출 완료 후에는 수정이 불가능합니다.</li>
                     </ul>
                 </div>
@@ -23,19 +24,69 @@
                 <form method="post" id="answerForm" class="needs-validation" novalidate>
                     {% csrf_token %}
                     
-                    {% for field in form %}
-                        <div class="mb-4">
-                            <label for="{{ field.id_for_label }}" class="form-label {% if field.field.required %}required-field{% endif %}">
-                                {{ field.label }}
-                            </label>
-                            {{ field }}
-                            {% if field.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ field.errors|join:", " }}
-                                </div>
-                            {% endif %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">면접 가능 시간</h5>
                         </div>
-                    {% endfor %}
+                        <div class="card-body">
+                            <div class="alert alert-warning mb-3">
+                                <h6 class="alert-heading">면접 기간 안내</h6>
+                                <p class="mb-1">
+                                    면접은 {{ recruitment_settings.interview_start_date|date:"Y년 n월 j일" }}부터 
+                                    {{ recruitment_settings.interview_end_date|date:"Y년 n월 j일" }}까지 진행됩니다.
+                                </p>
+                                <p class="mb-0">
+                                    <small class="text-muted">
+                                        * 면접 시간은 선택하신 시간대를 고려하여 개별 연락드릴 예정입니다.
+                                    </small>
+                                </p>
+                            </div>
+                            <p class="text-muted mb-3">가능한 시간을 모두 선택해주세요. (최소 1개 이상)</p>
+                            <div class="row">
+                                {% for field in interview_form %}
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        {{ field }}
+                                        <label class="form-check-label" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">질문 답변</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for field in answer_form %}
+                                <div class="mb-4">
+                                    <label for="{{ field.id_for_label }}" class="form-label {% if field.field.required %}required-field{% endif %}">
+                                        {{ field.label }}
+                                    </label>
+                                    <div class="position-relative">
+                                        {{ field }}
+                                        <div class="char-count-wrapper text-end mt-1">
+                                            <small class="text-muted">
+                                                <span class="current-count">0</span>
+                                                <span>/</span>
+                                                <span class="max-count">{{ field.field.max_length }}</span>
+                                                <span>자</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ field.errors|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
 
                     <div class="text-center mt-4">
                         <button type="submit" name="save_draft" class="btn btn-outline-primary me-2" onclick="return confirmSave('draft')">
@@ -53,11 +104,58 @@
 
 {% block extra_js %}
 <script>
+    // 글자 수 카운트 및 유효성 검사
+    function updateCharCount(textarea) {
+        const currentLength = textarea.value.length;
+        const maxLength = parseInt(textarea.getAttribute('maxlength'));
+        const countWrapper = textarea.parentElement.querySelector('.char-count-wrapper');
+        const currentCount = countWrapper.querySelector('.current-count');
+        
+        currentCount.textContent = currentLength;
+        
+        if (currentLength > maxLength) {
+            countWrapper.classList.add('text-danger');
+            textarea.classList.add('is-invalid');
+        } else {
+            countWrapper.classList.remove('text-danger');
+            textarea.classList.remove('is-invalid');
+        }
+    }
+
+    // 모든 textarea에 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            // 초기 글자 수 표시
+            updateCharCount(textarea);
+            
+            // 입력할 때마다 글자 수 업데이트
+            textarea.addEventListener('input', function() {
+                updateCharCount(this);
+            });
+            
+            // 붙여넣기 시에도 글자 수 업데이트
+            textarea.addEventListener('paste', function() {
+                setTimeout(() => updateCharCount(this), 0);
+            });
+        });
+    });
+
     function confirmSave(type) {
         const form = document.getElementById('answerForm');
-        const exceeded = Array.from(document.querySelectorAll('.char-count.exceeded')).length > 0;
-        
-        if (exceeded) {
+        const textareas = form.querySelectorAll('textarea');
+        let hasExceeded = false;
+
+        // 글자 수 초과 검사
+        textareas.forEach(textarea => {
+            const currentLength = textarea.value.length;
+            const maxLength = parseInt(textarea.getAttribute('maxlength'));
+            if (currentLength > maxLength) {
+                hasExceeded = true;
+            }
+        });
+
+        if (hasExceeded) {
             alert('글자 수 제한을 초과한 항목이 있습니다. 수정 후 다시 시도해주세요.');
             return false;
         }
@@ -68,6 +166,15 @@
             
             if (empty) {
                 alert('모든 필수 항목을 작성해주세요.');
+                return false;
+            }
+
+            // 면접 시간 선택 확인
+            const interviewTimes = Array.from(form.querySelectorAll('input[type="checkbox"]'));
+            const selectedTimes = interviewTimes.filter(checkbox => checkbox.checked);
+            
+            if (selectedTimes.length === 0) {
+                alert('면접 가능 시간을 최소 한 개 이상 선택해주세요.');
                 return false;
             }
 
@@ -104,5 +211,21 @@
         clearInterval(autoSaveInterval);
     });
 </script>
+
+<style>
+    .char-count-wrapper {
+        font-size: 0.875rem;
+    }
+    .char-count-wrapper.text-danger {
+        font-weight: bold;
+    }
+    textarea.is-invalid {
+        border-color: #dc3545;
+    }
+    textarea.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+</style>
 {% endblock %}
 {% endblock %} 

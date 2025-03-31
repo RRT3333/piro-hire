@@ -19,10 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.contrib.auth import views as auth_views
+from applications.forms import CustomAuthenticationForm
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('applications/', include('applications.urls')),
-    path('', RedirectView.as_view(pattern_name='applications:index'), name='home'),
+    path('', include('applications.urls')),
+    path('accounts/login/', auth_views.LoginView.as_view(
+        authentication_form=CustomAuthenticationForm
+    ), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

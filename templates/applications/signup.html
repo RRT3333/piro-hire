@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}회원가입 - 피로그래밍{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    .form-select {
+        color: #fff;
+        background-color: #212529;
+        border: 1px solid #495057;
+    }
+    .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-select option {
+        color: #fff;
+        background-color: #212529;
+    }
+    .preview-container {
+        width: 108px;  /* 3:4 비율 (108:144) */
+        height: 144px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        position: relative;
+    }
+    #photo-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: none;
+    }
+    #default-icon {
+        font-size: 2.5rem;
+        color: #adb5bd;
+        position: relative;
+        z-index: 1;
+    }
+    .photo-input-container {
+        margin-top: 1rem;
+    }
+    .photo-help-text {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .profile-photo-container {
+        width: 108px;  /* 3:4 비율 (108:144) */
+        height: 144px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .profile-photo-placeholder {
+        font-size: 2.5rem;
+        color: #adb5bd;
+        z-index: 1;
+    }
+    .invalid-feedback {
+        display: none;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    /* 이미지 업로드 영역 스타일링 */
+    .photo-upload-section {
+        text-align: center;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .photo-upload-section .form-control {
+        max-width: 200px;
+        margin: 0.5rem auto;
+    }
+    /* 이미지 크기 안내 텍스트 */
+    .size-guide {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">회원가입</h2>
+                    
+                    <form method="post" enctype="multipart/form-data" id="signupForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="photo-upload-section">
+                                    <div class="preview-container mb-3">
+                                        <img id="photo-preview" alt="프로필 사진 미리보기">
+                                        <i id="default-icon" class="bi bi-person-circle"></i>
+                                    </div>
+                                    <div class="photo-input-container">
+                                        <label for="id_photo" class="form-label">프로필 사진</label>
+                                        <input type="file" name="photo" class="form-control form-control-sm" accept="image/*" id="id_photo">
+                                        <small class="photo-help-text">3x4cm 사진을 업로드해주세요.</small>
+                                        <span class="size-guide">권장 크기: 300x400 픽셀</span>
+                                    </div>
+                                    <div class="invalid-feedback" id="photoError"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                {{ form.email|as_crispy_field }}
+                                {{ form.name|as_crispy_field }}
+                                {{ form.phone_number|as_crispy_field }}
+                                {{ form.birth_date|as_crispy_field }}
+                                {{ form.university|as_crispy_field }}
+                                {{ form.major|as_crispy_field }}
+                                {{ form.grade|as_crispy_field }}
+                                {{ form.academic_status|as_crispy_field }}
+                                {{ form.password1|as_crispy_field }}
+                                {{ form.password2|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">회원가입</button>
+                            <a href="{% url 'login' %}" class="btn btn-outline-secondary">이미 계정이 있으신가요? 로그인</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('id_photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const defaultIcon = document.getElementById('default-icon');
+    const photoError = document.getElementById('photoError');
+    const form = document.getElementById('signupForm');
+
+    // 파일 유효성 검사 함수
+    function validateFile(file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(file.type.toLowerCase()) && 
+            !file.name.toLowerCase().endsWith('.heic') && 
+            !file.name.toLowerCase().endsWith('.heif')) {
+            return 'JPG, PNG, HEIC 또는 HEIF 형식의 이미지만 업로드 가능합니다.';
+        }
+
+        if (file.size > maxSize) {
+            return '파일 크기는 5MB를 초과할 수 없습니다.';
+        }
+
+        return null;
+    }
+
+    photoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // 파일 유효성 검사
+            const error = validateFile(file);
+            if (error) {
+                photoError.textContent = error;
+                photoError.style.display = 'block';
+                photoInput.value = '';
+                photoPreview.style.display = 'none';
+                defaultIcon.style.display = 'block';
+                return;
+            }
+
+            // 이미지 미리보기
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.src = e.target.result;
+                photoPreview.style.display = 'block';
+                defaultIcon.style.display = 'none';
+                photoError.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // 파일 선택 취소 시
+            photoPreview.style.display = 'none';
+            defaultIcon.style.display = 'block';
+            photoError.style.display = 'none';
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        const file = photoInput.files[0];
+        if (file) {
+            const error = validateFile(file);
+            if (error) {
+                e.preventDefault();
+                photoError.textContent = error;
+                photoError.style.display = 'block';
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

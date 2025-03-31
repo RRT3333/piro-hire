@@ -1,88 +1,65 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}피로그래밍 지원 - 기본 정보{% endblock %}
+{% block title %}지원서 작성 - 피로그래밍{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">기본 정보 입력</h2>
-
-                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <h5>지원자 정보</h5>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">기본 정보 입력</h2>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
                         {{ applicant_form|crispy }}
-                    </div>
 
-                    <div class="mb-4">
-                        <h5>면접 희망 시간</h5>
-                        {{ application_form|crispy }}
-                    </div>
+                        <hr>
+                        <h4 class="mb-3">면접 가능 시간</h4>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            면접 가능한 시간을 모두 선택해주세요. (최소 1개 이상)
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ application_form.interview_sat_morning|as_crispy_field }}
+                                {{ application_form.interview_sat_afternoon|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ application_form.interview_sun_morning|as_crispy_field }}
+                                {{ application_form.interview_sun_afternoon|as_crispy_field }}
+                            </div>
+                        </div>
 
-                    <div class="alert alert-info">
-                        <h5 class="alert-heading">안내사항</h5>
-                        <ul class="mb-0">
-                            <li>이메일 주소로 인증 메일이 발송됩니다.</li>
-                            <li>증명사진은 3x4 사이즈로 준비해주세요.</li>
-                            <li>면접 시간은 가능한 시간대를 모두 선택해주세요.</li>
-                            <li>모든 필수 항목(*)을 작성해주세요.</li>
-                        </ul>
-                    </div>
-
-                    <div class="text-center">
-                        <a href="{% url 'applications:index' %}" class="btn btn-secondary">
-                            돌아가기
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            다음 단계
-                        </button>
-                    </div>
-                </form>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">다음</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
-    // Preview uploaded image
-    document.getElementById('id_photo').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert('파일 크기는 5MB를 초과할 수 없습니다.');
-                e.target.value = '';
-                return;
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                alert('이미지 파일만 업로드 가능합니다.');
-                e.target.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.createElement('img');
-                preview.src = e.target.result;
-                preview.style.maxHeight = '200px';
-                preview.style.marginTop = '10px';
-                preview.className = 'img-thumbnail';
-                
-                const previewContainer = document.getElementById('id_photo').parentElement;
-                const existingPreview = previewContainer.querySelector('img');
-                if (existingPreview) {
-                    existingPreview.remove();
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            let checked = false;
+            checkboxes.forEach(function(checkbox) {
+                if (checkbox.checked) {
+                    checked = true;
                 }
-                previewContainer.appendChild(preview);
+            });
+            if (!checked) {
+                e.preventDefault();
+                alert('면접 가능 시간을 최소 1개 이상 선택해주세요.');
             }
-            reader.readAsDataURL(file);
-        }
+        });
     });
 </script>
-{% endblock %}
 {% endblock %} 
