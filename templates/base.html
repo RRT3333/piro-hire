@@ -155,7 +155,7 @@
                                     이메일 인증 완료하기
                                 </a>
                             </li>
-                        {% elif user.application_set.exists %}
+                        {% elif user.applications.exists %}
                             <li class="nav-item">
                                 <a class="nav-link text-piro-white" href="{% url 'applications:answer_questions' %}">
                                     지원서 작성 이어하기
