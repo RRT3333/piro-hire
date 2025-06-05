@@ -32,7 +32,7 @@ def index(request):
     }
     
     if request.user.is_authenticated:
-        context['has_application'] = hasattr(request.user, 'application_set') and request.user.application_set.exists()
+        context['has_application'] = request.user.applications.exists()
     
     return render(request, 'applications/index.html', context)
 
@@ -81,7 +81,7 @@ def start_application(request):
                 
                 if not request.user.is_authenticated:
                     # 새로운 사용자 로그인 처리
-                    login(request, applicant)
+                    login(request, applicant, backend='applications.auth.EmailBackend')
                 
                 # 이메일 인증 코드 발송
                 send_verification_email(applicant)
@@ -167,6 +167,8 @@ def answer_questions(request):
                     )
             
             if 'save_draft' in request.POST:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'success'})
                 messages.success(request, '임시저장되었습니다.')
                 return redirect('applications:answer_questions')
             else:
