@@ -44,7 +44,7 @@ def start_application(request):
     # 이미 로그인한 사용자의 경우
     if request.user.is_authenticated:
         # 지원서가 있는 경우 질문 답변 페이지로 리다이렉트
-        if hasattr(request.user, 'applications') and request.user.applications.filter(recruitment_settings=recruitment).exists():
+        if request.user.applications.filter(recruitment_settings=recruitment).exists():
             return redirect('applications:answer_questions')
         
         # 지원서가 없는 경우 기존 정보로 폼 초기화
