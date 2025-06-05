@@ -50,7 +50,7 @@
 {% block extra_js %}
 <script>
     // Preview uploaded image
-    document.getElementById('id_photo').addEventListener('change', function(e) {
+    document.getElementById('id_profile_picture').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
@@ -73,7 +73,7 @@
                 preview.style.marginTop = '10px';
                 preview.className = 'img-thumbnail';
                 
-                const previewContainer = document.getElementById('id_photo').parentElement;
+                const previewContainer = document.getElementById('id_profile_picture').parentElement;
                 const existingPreview = previewContainer.querySelector('img');
                 if (existingPreview) {
                     existingPreview.remove();
