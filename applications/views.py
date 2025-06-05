@@ -32,7 +32,7 @@ def index(request):
     }
     
     if request.user.is_authenticated:
-        context['has_application'] = hasattr(request.user, 'application_set') and request.user.application_set.exists()
+        context['has_application'] = request.user.applications.exists()
     
     return render(request, 'applications/index.html', context)
 
