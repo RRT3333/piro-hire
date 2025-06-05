@@ -5,7 +5,7 @@ from .models import Applicant
 class EmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
-            # username 필드에 이메일이 들어올 수 있으므로 둘 다 체크
+            # 로그인은 이메일을 기준으로만 조회합니다
             user = Applicant.objects.get(Q(email=username))
             if user.check_password(password):
                 return user

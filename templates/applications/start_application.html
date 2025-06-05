@@ -45,19 +45,36 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-            let checked = false;
-            checkboxes.forEach(function(checkbox) {
-                if (checkbox.checked) {
-                    checked = true;
+    // Preview uploaded image
+    document.getElementById('id_profile_picture').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                e.target.value = '';
+                return;
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                e.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('img');
+                preview.src = e.target.result;
+                preview.style.maxHeight = '200px';
+                preview.style.marginTop = '10px';
+                preview.className = 'img-thumbnail';
+                
+                const previewContainer = document.getElementById('id_profile_picture').parentElement;
+                const existingPreview = previewContainer.querySelector('img');
+                if (existingPreview) {
+                    existingPreview.remove();
                 }
-            });
-            if (!checked) {
-                e.preventDefault();
-                alert('면접 가능 시간을 최소 1개 이상 선택해주세요.');
+                previewContainer.appendChild(preview);
             }
         });
     });

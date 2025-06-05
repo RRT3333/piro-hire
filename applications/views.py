@@ -33,7 +33,7 @@ def index(request):
     }
     
     if request.user.is_authenticated:
-        context['has_application'] = hasattr(request.user, 'application_set') and request.user.application_set.exists()
+        context['has_application'] = request.user.applications.exists()
     
     return render(request, 'applications/index.html', context)
 
@@ -41,6 +41,7 @@ def signup(request):
     if request.user.is_authenticated:
         return redirect('applications:index')
     
+<<<<<<< HEAD
     if request.method == 'POST':
         form = SignUpForm(request.POST, request.FILES)
         if form.is_valid():
@@ -50,6 +51,16 @@ def signup(request):
             send_verification_email(user)
             messages.success(request, '회원가입이 완료되었습니다. 이메일로 전송된 인증 코드를 입력해주세요.')
             return redirect('applications:verify_email')
+=======
+    # 이미 로그인한 사용자의 경우
+    if request.user.is_authenticated:
+        # 지원서가 있는 경우 질문 답변 페이지로 리다이렉트
+        if request.user.applications.filter(recruitment_settings=recruitment).exists():
+            return redirect('applications:answer_questions')
+        
+        # 지원서가 없는 경우 기존 정보로 폼 초기화
+        applicant_form = ApplicantForm(instance=request.user)
+>>>>>>> a26d92994d0bbae7eaea83c06e1577dfdde5c6ed
     else:
         form = SignUpForm()
     
@@ -86,6 +97,7 @@ def start_application(request):
         application_form = ApplicationForm(request.POST, instance=application)
         
         if applicant_form.is_valid() and application_form.is_valid():
+<<<<<<< HEAD
             applicant_form.save()
             application = application_form.save()
             messages.success(request, '기본 정보가 저장되었습니다.')
@@ -93,6 +105,36 @@ def start_application(request):
     else:
         applicant_form = ApplicantForm(instance=request.user)
         application_form = ApplicationForm(instance=application)
+=======
+            with transaction.atomic():
+                applicant = applicant_form.save(commit=False)
+                if not request.user.is_authenticated:
+                    # 새로운 사용자의 경우 임시 비밀번호 설정
+                    temp_password = User.objects.make_random_password()
+                    applicant.set_password(temp_password)
+                applicant.save()
+                
+                # 기존 지원서가 있는지 확인
+                application, created = Application.objects.get_or_create(
+                    applicant=applicant,
+                    recruitment_settings=recruitment,
+                    defaults={'status': 'draft'}
+                )
+                
+                # 면접 시간 업데이트
+                application.interview_times = application_form.cleaned_data['interview_times']
+                application.save()
+                
+                if not request.user.is_authenticated:
+                    # 새로운 사용자 로그인 처리
+                    login(request, applicant, backend='applications.auth.EmailBackend')
+                
+                # 이메일 인증 코드 발송
+                send_verification_email(applicant)
+                
+                messages.success(request, '이메일로 인증 코드가 발송되었습니다. 이메일을 확인해주세요.')
+                return redirect('applications:verify_email')
+>>>>>>> a26d92994d0bbae7eaea83c06e1577dfdde5c6ed
     
     context = {
         'applicant_form': applicant_form,
@@ -196,6 +238,8 @@ def answer_questions(request):
                     )
             
             if 'save_draft' in request.POST:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'success'})
                 messages.success(request, '임시저장되었습니다.')
                 return redirect('applications:answer_questions')
             else:
